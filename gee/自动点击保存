@@ -1,0 +1,77 @@
+runTasks = function() {
+    const evt = new MouseEvent('click', {bubbles: true, cancelable: true, ctrlKey: true})
+    $$('.run-button' ,$$('ee-task-pane')[0].shadowRoot).forEach(function(e) {
+        e.dispatchEvent(evt)
+    })
+}
+runTasks()
+
+
+///////////////////////// 2021 11 01 更新 /////////////////////////////////
+function clickBtn(qFn,waitTime) {
+    return new Promise((s,f) => {
+        let times = waitTime / 100;
+        let id = setInterval(() => {
+            let btn = qFn();
+            if (btn) {
+                clearInterval(id);
+                s(btn);
+            } else {
+                if (!times) {
+                    clearInterval(id);
+                    f(null);
+                }
+            }
+            time--;
+        },100);
+    });
+}
+var doBtn = () => clickBtn(() => document.querySelector("#task-pane").shadowRoot.querySelector("ee-button"),10 * 1000);
+var doneBtn = () => clickBtn(() => document.querySelector("body > ee-image-config-dialog").shadowRoot.querySelector("ee-dialog").shadowRoot.querySelector("paper-dialog > div.buttons > ee-button.ok-button"),10000)
+function clickToRunTask() {
+    doBtn()
+        .then(btn => {
+            btn.click();
+            doneBtn().then(btn => {
+                btn.click();
+                clickToRunTask();
+            }).catch(err => {
+                if (err) {
+                    throw err;
+                }
+                console.log('over but why');
+            });
+        }).catch(err => {
+            if (err) {
+                throw err;
+            } else {
+                console.log('all over');
+            }
+    })
+}
+/////////////////////////////////////////////////////////////////
+
+
+
+
+function runTaskList(_) {
+    var tasklist = document.getElementsByClassName('awaiting-user-config');
+    for (var i = 0;i < tasklist.length;i++) {
+        var task = tasklist[i];
+        var runbtn = task.getElementsByClassName('run-button');
+        if (runbtn && runbtn.length && runbtn[0].innerText.toLowerCase() === 'run') {
+            runbtn[0].click();
+        }
+    }
+    (_||(()=>{}))();
+}
+
+function clickComfirm() {
+    let dialog = document.getElementsByClassName('task-config-dialog');
+    for (var i = 0;i < dialog.length;i++) {
+        dialog[i].getElementsByTagName('button')[0].click();
+    }
+}
+runTaskList(clickComfirm);
+
+

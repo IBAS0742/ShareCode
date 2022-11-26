@@ -1,0 +1,36 @@
+pro a
+  for year = 2002, 2018, 1 do begin
+    restore, 'G:\WuInstall\Exelis\ENVI53\extensions\zhu_casa_npp_ui.sav' ;加载植被NPP计算模块
+    ; year = 2001 ;年份
+    ; only one
+    year1 = strtrim(year, 2)
+    para_file = 'G:\WuDownload\服务器临时使用\亮哥数据\21-01-19\npp_para_file1.csv' ;静态参数文件
+  
+    ; vege_file = 'G:\WuDownload\服务器临时使用\亮哥数据\21-01-19\TifToLinkTranDat\2001.dat'
+    vege_file = 'G:\WuDownload\服务器临时使用\亮哥数据\21-01-19\TifToLinkTranDat\' + year1 + '.dat' ;土地覆盖类型图文件
+    print, vege_file
+  
+    vi_file = 'Y:\draught_index_calculation_module\per_source\ndvi_avg_tk_arcgis\yanmo_dat\' + year1 + '.dat'  ;植被指数文件
+    print, vi_file
+    
+    ; only one
+    temp_file = 'Y:\chen\del\LST多年平均-worldclime\LST多年平均-worldclime_yanmo\dat\lst_merge.dat' ;温度文件
+    print, temp_file
+  
+    prec_file = 'Y:\2020_download_data\clip\pps_aral_sea_monthsum_dat\' + year1 + '.dat'  ;降水文件
+    print, prec_file
+  
+    ;radi_file = 'Y:\chen\del\ecmwf_surface_solar_radiation_downwards_yanmo\dat\' + year1 + '.dat'  ;太阳辐射文件
+    radi_file = 'Y:\chen\del\NPP\wc2.1_30s_srad_output3_A_dat\year.dat' ;太阳辐射文件
+    print, radi_file
+    
+    ; continue
+    ;topt_file = 'C:\ZWQENVI\CASANPP2\Data\topt\topt_file.dat' ;最适温度文件，可选项
+    ;lpe_file = 'C:\ZWQENVI\CASANPP2\Data\lpe\lpe_2018.dat' ;局地潜在蒸散量文件，可选项
+    ; out_file = 'G:\WuDownload\服务器临时使用\亮哥数据\21-01-19\NppOutput\npp_' + year1 + '.dat';输出的植被NPP文件
+    out_file = 'G:\WuDownload\服务器临时使用\亮哥数据\21-02-25\' + year1 + '.dat'; ;输出的植被NPP文件
+    zhu_casa_npp_calc, para_file = para_file, vege_file = vege_file, vi_file = vi_file, $
+      temp_file = temp_file, prec_file = prec_file, radi_file = radi_file, year = year, $
+      topt_file = topt_file, lpe_file = lpe_file, out_file = out_file, /quiet, /eb
+   endfor
+  end

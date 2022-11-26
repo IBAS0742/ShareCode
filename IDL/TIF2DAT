@@ -1,0 +1,16 @@
+pro TIF2DAT
+  ;prec_file = 'Y:\chen\del\0730NPP\Aral_Sea\precipitation\' + year1 + '.dat'  ;降水文件
+  PATH = 'Y:\chen\del\0730NPP\Balkash\'
+  NAME = 'sun\'
+  for year = 2000, 2000, 1 do begin
+    year1 = strtrim(year, 2)
+    TIF = PATH + NAME + year1 + '.tif'
+    DAT = PATH + NAME + year1 + '.dat'
+    PRINT,TIF
+    imgData = read_tiff(TIF, ORIENTATION=orientation, /VERBOSE)
+    openw, lun, DAT, /GET_LUN
+    writeu, lun, imgData
+    free_lun, lun
+  endfor
+  print,'over'
+end

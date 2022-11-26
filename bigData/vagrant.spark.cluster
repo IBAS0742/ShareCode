@@ -1,0 +1,42 @@
+$script = <<SCRIPT
+   sudo apt-get update
+   sudo apt-get -y install openjdk-8-jdk
+   sudo apt-get install sshpass
+   sudo mkdir /home/ubuntu/resources
+   sudo chmod 777 /home/ubuntu/resources
+   cp -r /home/vagrant/share/spark-standalone /home/ubuntu/resources/spark-standalone
+   
+   sudo echo 192.168.33.100 linux1 linux1 >> /etc/hosts
+   sudo echo 192.168.33.101 linux2 linux2 >> /etc/hosts
+   sudo echo 192.168.33.102 linux3 linux3 >> /etc/hosts
+SCRIPT
+
+Vagrant.configure("2") do |config|
+   (1..3).each do |i|
+        config.vm.define "linux#{i}" do |node|
+            # vagrant up 之后将这一句进行注释，不然每次启动虚拟机都将执行代码
+			config.vm.provision "shell", inline: $script
+            # 设置虚拟机的Box
+            node.vm.box = "ubuntu/xenial64"
+
+            # 设置虚拟机的主机名
+            node.vm.hostname="linux#{i}"
+
+            # 设置虚拟机的IP
+            node.vm.network "private_network", ip: "192.168.33.#{99+i}", netmask: "255.255.255.0"
+
+            # 设置主机与虚拟机的共享目录
+            node.vm.synced_folder "D:/vagrant_vm/master_slaver/share", "/home/vagrant/share"
+
+            # VirtaulBox相关配置
+            node.vm.provider "virtualbox" do |v|
+                # 设置虚拟机的名称
+                v.name = "linux#{i}"
+                # 设置虚拟机的内存大小
+                v.memory = 4096
+                # 设置虚拟机的CPU个数
+                v.cpus = 2
+            end
+        end
+   end
+end

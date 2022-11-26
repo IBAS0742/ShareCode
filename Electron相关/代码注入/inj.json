@@ -1,0 +1,6 @@
+[
+  {
+    "target": "https://webstatic.mihoyo.com/ys/event/e20210713warm/vendors.df8a2c1783.js",
+    "replace": "http://public.sunibas.cn/cdn/vendors.f8411819d8.js"
+  }
+]

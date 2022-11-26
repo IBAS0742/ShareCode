@@ -1,0 +1,14 @@
+[
+    {
+        "PATH": "Lib1",
+        "VERSION": "1",
+        "NAME": "Library.1",
+        "ALIS": "L1"
+    },
+    {
+        "PATH": "L2",
+        "VERSION": "2",
+        "NAME": "Library.2",
+        "ALIS": "Lib2"
+    }
+]

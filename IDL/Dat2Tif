@@ -1,0 +1,18 @@
+PRO dattotif
+  e = ENVI()
+  ;; name 和 inpath 共同组成文件名，
+  name = 'Aral_Sea\'
+  inpath = 'Z:\chen\del\0730NPP\result\' + name
+  outpath = inpath
+  n = strlen(inpath)
+  file_search=file_search(inpath,'*.dat',count = num,/test_regular)
+  for i = 0,num-1 do begin ; 利用for循环实现批量转换
+    raster1 = e.OpenRaster(file_search[i]) ; 读入文件
+    aotname=file_search[i]
+    ind = strlen(aotname) - n - 4;
+    fname=STRMID(aotname,n,ind);;;;（不包含‘.dat’）
+    filepath_output = outpath +strcompress(fname, /remove)+ '.tif' ; 输出文件路径
+    raster1.Export, filepath_output, 'TIFF' ; 输出为tiff格式
+    Print,'finished'
+  endfor
+end
