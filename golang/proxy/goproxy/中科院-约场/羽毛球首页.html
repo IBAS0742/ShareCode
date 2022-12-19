@@ -1,0 +1,202 @@
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0,viewport-fit=cover">
+  <title>SIAT 羽毛球</title>
+  <link rel="stylesheet" href="/static/service/lib/wechat/style/weui.css"/>
+  <link rel="stylesheet" href="/static/service/lib/wechat/example/example.css"/>
+</head>
+<body>
+<div class="page__bd">
+  <div class="weui-cells__title">羽毛球可预定场地</div>
+  <div class="weui-cells__group weui-cells__group_form">
+    <div class="weui-cells weui-cells_form">
+      <div class="weui-cell weui-cell_active weui-cell_vcode">
+        <div class="weui-cell__hd"><label class="weui-label">选择场地:</label></div>
+        <div class="weui-cell__bd">
+          <a href="javascript:" class="weui-btn weui-btn_default" id="showPicker">选择场地</a>
+        </div>
+      </div>
+      <div class="weui-cell weui-cell_active weui-cell_vcode">
+        <div class="weui-cell__hd"><label class="weui-label">预定日期:</label></div>
+        <div class="weui-cell__bd">
+          <a href="javascript:" class="weui-btn weui-btn_default" id="showDatePicker">选择日期</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="weui-cells__title" id="msg">场地列表</div>
+  <div class="weui-cells" id="room_list">
+  </div>
+</div>
+
+<div id="loadingToast" style="display: none;">
+  <div class="weui-mask_transparent"></div>
+  <div class="weui-toast">
+        <span class="weui-primary-loading weui-icon_toast">
+            <span class="weui-primary-loading__dot"></span>
+        </span>
+    <p class="weui-toast__content">加载中</p>
+  </div>
+</div>
+<script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="https://res.wx.qq.com/open/libs/weuijs/1.2.1/weui.min.js"></script>
+<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js"></script>
+<script src="/static/service/lib/wechat/example/zepto.min.js"></script>
+<script src="/static/Admin/lib/layui/layui.js"></script>
+<script type="text/javascript">
+  $(function () {
+    let useragent = navigator.userAgent.toLowerCase();
+    if (useragent.indexOf('micromessenger') === -1) {
+      window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=0&redirect_uri=&response_type=code&scope=snsapi_userinfo&state=aexezyyt4xtue6a1rpoww7uis206emju&connect_redirect=1#wechat_redirect";
+    }else{
+      function BridgeReady(){WeixinJSBridge.call('hideOptionMenu');}document.addEventListener('WeixinJSBridgeReady', BridgeReady);
+    }
+    let list;
+    let date_s = '';
+    let room = '';
+    let date_m = '';
+    function csrfSafeMethod(method) {
+      // these HTTP methods do not require CSRF protection
+      return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({
+      beforeSend: function (xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+          xhr.setRequestHeader("X-CSRFTOKEN", 'guSvNWErjVTRXv3t1DGbiMIsLoAoVBLbvMt4C6pOo0tmUwFQvorwJyA1y0WkMD4m');
+        }
+      },
+    });
+    function showload() {
+      $('#msg').text("可用时间段列表:" + date_m);
+      let $loadingToast = $('#loadingToast');
+      if ($loadingToast.css('display') !== 'none') return;
+      $loadingToast.fadeIn(100);
+    }
+    function closeload() {
+      let $loadingToast = $('#loadingToast');
+      $loadingToast.fadeOut(100);
+    }
+    $.ajax({
+      url: '/make/Field/Badminton/',
+      data: {t: 'GetFieldData'},
+      async: false,
+      type: 'POST',
+      dataType: 'json',
+      success: function (data) {
+        console.log(data)
+        list = data.data;
+        room = list[0].value;
+        date_s = (new Date().getFullYear()).toString() + (new Date().getMonth() + 1).toString() + (new Date().getDate()).toString()
+        date_m = (new Date().getFullYear()).toString() + '-' + (new Date().getMonth() + 1).toString() + '-' +  (new Date().getDate()).toString()
+        $('#showPicker').text(list[0].label);
+        $('#showDatePicker').text((new Date().getFullYear()).toString() + '年' + (new Date().getMonth() + 1).toString() + '月' + (new Date().getDate()).toString() + '日')
+        if (date_s !== '' && room !== '') {
+          $('#room_list').html("")
+          showload()
+          window.setTimeout(function () {
+            get_order(date_m);
+          }, 500)
+        }
+      }
+    })
+    $('#showPicker').on('click', function () {
+      weui.picker(list, {
+        onConfirm: function (result) {
+          console.log(result[0].label);
+          $('#showPicker').text(result[0].label);
+          room = result[0].value
+          if (date_s !== '' && room !== '') {
+            $('#room_list').html("")
+            showload()
+            window.setTimeout(function () {
+              get_order(date_m);
+            }, 400)
+          }
+        },
+        title: '选择场地'
+      });
+    });
+    $('#showDatePicker').on('click', function () {
+      let date = new Date()
+      let month = date.getMonth() + 1;
+      var date2 = new Date(date);
+      date2.setDate(date.getDate()+2);
+      var end_date = date2.getFullYear()+"-"+(date2.getMonth()+1)+"-"+date2.getDate();
+      weui.datePicker({
+        start: new Date().getFullYear() + "-" + month + "-" + (parseInt(new Date().getDate())).toString(),
+        end: end_date ,//new Date().getFullYear() + "-" + month + "-" + (parseInt(new Date().getTime() + 1000*60*60*24*7)).toString(),
+        onConfirm: function (result) {
+          let date = new Date()
+          let month = date.getMonth() + 1;
+          console.log(result[0].value);
+          console.log(date.getFullYear());
+          console.log(result[1].value);
+          console.log(month);
+          if (result[0].value === date.getFullYear() && result[1].value === month) {
+            /*if (new Date().getDay() + 1 > parseInt(result[2].value)) {
+                alert("日期必须大于或等于现在时间");
+                return false;
+            }*/
+            if (new Date().getDate() > parseInt(result[2].value)) {
+              alert("日期必须大于或等于现在时间");
+              return false;
+            }
+          }
+          date_s = result[0].value.toString() + result[1].value.toString() + result[2].value.toString()
+          date_m = result[0].value.toString() + '-' + result[1].value.toString() + '-' +  result[2].value.toString()
+          $('#showDatePicker').text(result[0].label + result[1].label + result[2].label);
+          if (date_s !== '' && room !== '') {
+            $('#room_list').html("")
+            showload()
+            window.setTimeout(function () {
+              get_order(date_m);
+            }, 400)
+          }
+        },
+        title: '请选择预约日期'
+      });
+    });
+
+    function get_order(day) {
+      $.ajax({
+        url: '/make/Field/Badminton/',
+        data: {t: 'GetData', day: day, 'field': room},
+        async: false,
+        type: 'POST',
+        success: function (data) {
+          console.log(data);
+          let jsonobj = data
+          if (jsonobj.data.length <= 0) {
+            $('#room_list').append('<div class="weui-loadmore weui-loadmore_line"><span class="weui-loadmore__tips">暂无可预定房间</span></div>');
+            closeload();
+            return false;
+          }
+          for (let i = 0; i < jsonobj.data.length; i++) {
+
+            if (jsonobj.data[i].field_count <= 0) {
+              $('#room_list').append(
+                      '<div class="weui-cell  weui-cell_access weui-cell_example">' +
+                      '<div class="weui-cell__hd"><img src="/static/admin/images/admin.png" alt="" style="width: 20px; margin-right: 16px; display: block;"></div>' +
+                      '<div class="weui-cell__bd">' +
+                      '<p>' + jsonobj.data[i].field_day + ' ' +  jsonobj.data[i].field_name + ' ' +  jsonobj.data[i].time_title + '</p>' +
+                      '</div><a class="weui-btn weui-btn_primary weui-btn" style="width: 35%;" href="/make/Field/Badminton/?t=Reserve&field_id=' + jsonobj.data[i].field_id + '&day=' + jsonobj.data[i].field_day + '&time_id=' + jsonobj.data[i].field_time_id + '&type='+ room +'" id="btn">预定</a>' + '</div>')
+            }else {
+              $('#room_list').append(
+                      '<div class="weui-cell  weui-cell_access weui-cell_example">' +
+                      '<div class="weui-cell__hd"><img src="/static/admin/images/admin.png" alt="" style="width: 20px; margin-right: 16px; display: block;"></div>' +
+                      '<div class="weui-cell__bd">' +
+                      '<p>' + jsonobj.data[i].field_day + ' ' +  jsonobj.data[i].field_name + ' ' +  jsonobj.data[i].time_title + '</p>' +
+                      '</div><a class="weui-btn weui-btn_primary weui-btn weui-btn_disabled" style="width: 35%;" href="#" id="btn">已被预定</a>' + '</div>')
+            }
+          }
+          closeload()
+        },error: function () {
+          closeload()
+        }
+      })
+    }
+  })
+</script>
+</body>
+</html>

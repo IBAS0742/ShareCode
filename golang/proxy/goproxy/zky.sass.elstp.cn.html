@@ -1,0 +1,404 @@
+<noscript>
+    window.reqParams = [
+    ]
+
+    window.fieldId = `ec640b11-140f-4377-2b56-3f6e011afec10
+ec640b11-140f-4377-2b56-3f6e011afec11
+ec640b11-140f-4377-2b56-3f6e011afec12
+ec640b11-140f-4377-2b56-3f6e011afec13
+ec640b11-140f-4377-2b56-3f6e011afec14
+`.split('\n').map(_=>_.trim());
+
+    window.reqTime = 0;
+    $(function () {
+        $('.page__bd').before(`<div class="" id="my_message"></div>`)
+        $('#my_message').html("");
+        // $('#my_message').append(`<textarea placeholder="订单备注" id="remarks" rows="3" style="height: 20px;"></textarea>`);
+        function showMsg(msg,name) {
+            name = name || '请求结果';
+            $('#my_message').append(`<div><div style="display: inline-block;width:200px;">${name}</div><div style="display: inline-block;">${msg}</div></div>`)
+            // $('#my_message').append(
+            //     `<div className="weui-cell weui-cell_active">
+            //         <div className="weui-cell__hd"><label className="weui-label">${name}</label></div>
+            //         <div className="weui-cell__bd">
+            //             <div className="weui-input"><span style="color:white;background: black;">${msg}</span></div>
+            //         </div>
+            //     </div>`);
+        };
+        showMsg('开始',"消息");
+        window.alert = showMsg;
+        window.confirm = () => true;
+        var _ajax = $.ajax;
+        $.ajax = function (opt) {
+            // alert(JSON.stringify(opt));
+            showMsg('$.ajax',"消息");
+            _ajax({
+                ...opt,
+                data: {
+                    ...opt.data,
+                    field_id: window.fieldId[window.reqTime],
+                },
+                success(data) {
+                    if (data.code === 0) {
+                        showMsg(data.code,`请求成功了`);
+                    } else {
+                        showMsg(data.code,`第${window.reqTime}次请求结束`);
+                        setTimeout(() => {
+                            nextTo();
+                        },1000);
+                    }
+                },
+                error() {
+                    showMsg("error-error",`请求结束`);
+                }
+            });
+        };
+        function nextTo() {
+            showMsg('nextTo',"消息");
+            if (window.reqTime === window.fieldId.length) {
+                showMsg("全部尝试结束",`主体部分`);
+            } else {
+                showMsg('nextTo-else',"消息");
+                setTimeout(() => {
+                    showMsg('nextTo-setTimeout',"消息");
+                    $('#btn').click();
+                    window.reqTime++;
+                },1000);
+            }
+        };
+        setTimeout(nextTo,1000);
+    });
+</noscript>
+
+
+<script sid="utils">
+    window.confirm = () => true;
+    $(function () {
+        $('head').append(`<style>
+    table {
+        border-right: 1px solid #000000;
+        border-bottom: 1px solid #000000;
+        text-align: center;
+    }
+
+    table th {
+        border-left: 1px solid #000000;
+        border-top: 1px solid #000000;
+    }
+
+    table td {
+        border-left: 1px solid #000000;
+        border-top: 1px solid #000000;
+    }
+</style>`);
+    });
+    /**
+     * @param promise   要执行的 promise，可以自行封装一次
+     * @param arr       数组，参数集合，记得和 promise 匹配
+     * @param doPromiseReturn   如果需要对 promise 的结果进行处理，可以使用这个参数
+     * @returns {Promise<unknown>}
+     */
+    window.runPromiseByArrReturnPromise = (promise,arr,doPromiseReturn) => {
+        let doing = false;
+        doPromiseReturn = doPromiseReturn || (_=>_);
+        return new Promise(s => {
+            let _id = setInterval(() => {
+                if (!doing) {
+                    doing = true;
+                    if (arr.length) {
+                        let id = arr.pop();
+                        promise(id)
+                            .then(o => {
+                                doPromiseReturn(o,id);
+                                doing = false;
+                            });
+                    } else {
+                        clearInterval(_id);
+                        s();
+                    }
+                }
+            },500);
+        });
+    };
+
+    window.addInfo = function (msg) {
+        document.getElementsByClassName('ibas_bd')[0].innerHTML += `<div>${msg}</div>`
+    }
+
+    window.drawTable = function(objArr,title) {
+        // window.addInfo(JSON.stringify(objArr));
+        let header = '<thead><tr><th>#</th>';
+        let tbody = '';
+        let fields = [];
+        if (objArr.length) {
+            for (let i in objArr[0]) {
+                fields.push(i);
+                header += `<th>${i}</th>`;
+            }
+        }
+        objArr.forEach((obj,oind) => {
+            tbody += `<tr id="tr_${obj.id}"><td>${oind}</td>${fields.map(f => `<td>${obj[f]}</td>`).join('\r\n')}<td><Button class="apply" tar="${obj.id}">申请</Button></td><td class="result"></td></tr>`
+        });
+        header += '<th>订场</th><th>结果</th></tr></thead>'
+        let dom = `
+<div>${title || "表格标题"}</div>
+<table>
+${header}${tbody}
+</table>`;
+        $('body').append(`<div>${dom}</div>`);
+    };
+
+    function t2(n) {
+        n = n + '';
+        if (n.length === 1) {
+            return `0${n}`;
+        } else {
+            return n;
+        }
+    }
+    function getTime(addDays) {
+        addDays = addDays || 0;
+        let t = new Date()
+        let tt = new Date();
+        tt.setHours(8);
+        tt.setMinutes(0);
+        tt.setSeconds(10);
+        tt.setMilliseconds(0);
+        let deta = tt.getTime() - t.getTime();
+
+        t.setTime(t.getTime() + addDays * 24 * 3600 * 1000);
+        return {
+            day: `${t.getFullYear()}-${t2(t.getMonth() + 1)}-${t2(t.getDate())}`,
+            hour: t.getHours(),
+            minute: t.getMinutes(),
+            deta: deta
+        };
+    }
+</script>
+<script sid="request">
+    $(function () {
+        var _ajax = $.ajax;
+        // 修改默认的请求
+        $.ajax = function (opt) {
+            // window.addInfo(`_ajax`)
+            if (opt.data && opt.data.t === 'Reserve') {
+                // window.addInfo(`_ajax-Reserve`)
+                return _ajax({
+                    ...opt,
+                    // todo 修改这里
+                    data: {
+                        ...opt.data,
+                        ...window.nexter.CurrentObj.params,
+                    },
+                    success(data) {
+                        // window.addInfo("请求成功");
+                        window.ReserveCb(data);
+                    },
+                    error(err) {
+                        // window.addInfo("请求失败");
+                        window.ReserveCb({
+                            code: -1,
+                            msg: err.message
+                        });
+                    }
+                });
+            } else {
+                // window.addInfo(`_ajax-Other`)
+                return _ajax(opt);
+            }
+        };
+    });
+
+    window.ReserveCb = ()=>{};
+    window.GetType = {
+        Field: 'GetFieldData',
+        FieldInfo: 'GetData',
+    }
+    window.Get = function(type,data) {
+        return new Promise(s => {
+            $.ajax({
+                url: '/make/Field/Badminton/',
+                data: {
+                    t: type,
+                    ...data,
+                },
+                async: false,
+                type: 'POST',
+                dataType: 'json',
+                success(data) {
+                    window.addInfo(`_ajax-Get-success`);
+                    s(data);
+                },
+                error(err) {
+                    window.addInfo(`_ajax-Get-error`);
+                    window.addInfo(JSON.stringify(err));
+                    // showMsg("error-error",`请求结束`);
+                }
+            });
+        });
+    }
+    window.GetField = function () {
+        return window.Get(window.GetType.Field,{}).then(d => d.data);
+        // d = [
+        //     {
+        //         value:'afb16847-b58c-b294-1ec1-284c9f3bf931',
+        //         label: '羽毛球1号场地'
+        //     }
+        // ];
+    };
+    window.GetFieldInfo = function (day,fieldId) {
+        return window.Get(window.GetType.FieldInfo,{
+            day: day,
+            field: fieldId,
+        }).then(d => d.data);
+        // d = [
+        //     {
+        //         field_id:'afb16847-b58c-b294-1ec1-284c9f3bf931',
+        //         field_name: '羽毛球1号场地',
+        //         field_day:'2022-12-18',
+        //         field_time_id:'f3f7870a-a4d4-1e14-de22-21ba9a283ad1',
+        //         field_count: 0,
+        //         time_title: '09:00-10:00'
+        //     }
+        // ];
+    }
+</script>
+<script sid="nexter">
+    window.nexter = (new class{
+        constructor() {
+            this.objs = [];
+            this.index = -1;
+            this.cobj = null;
+        }
+        appendObj(fieldId,objArr,day) {
+            objArr.forEach(obj => {
+                let num = obj.field_name.match(/[0-9]/);
+                if (num && num.length) {
+                    num = num[0];
+                }
+                let time = obj.time_title.match(/[0-9]+/g);
+                if (time && time.length === 4) {
+                    time = time[0] + time[2];
+                }
+                this.objs.push({
+                    params: {
+                        field_id: obj.field_id,
+                        time_id: obj.field_time_id,
+                        day: obj.field_day, // '2022-12-16'
+                        type: fieldId,
+                        remarks: '',
+                    },
+                    info: {
+                        field_name: obj.field_name,
+                        field_day: obj.field_day,
+                        time_title: obj.time_title,
+                        id: `${num}-${time}`
+                    },
+                    id: `${num}-${time}`,
+                });
+            });
+        }
+        getObjById(id) {
+            for (let i = 0;i < this.objs.length;i++) {
+                if (this.objs[i].id === id) {
+                    this.cobj = this.objs[i];
+                    return this.objs[i];
+                }
+            }
+            return null;
+        }
+        get CurrentObj() {
+            if (this.cobj) {
+                return this.cobj;
+            } else {
+                return this.objs[0];
+            }
+        }
+    });
+    function InitNexter(day) {
+        window.addInfo(`InitNexter-start`)
+        return window.GetField().then(arr => {
+            // let obj = {
+            //     value:'afb16847-b58c-b294-1ec1-284c9f3bf931',
+            //         label: '羽毛球1号场地'
+            // };
+            window.addInfo(`InitNexter-GetField-over`)
+            return window.runPromiseByArrReturnPromise(obj => {
+                return window.GetFieldInfo(day,obj.value).then(arr => {
+                    window.addInfo(`InitNexter-GetFieldInfo-over [${obj.value}]`);
+                    window.nexter.appendObj(obj.value,arr,day);
+                    return true;
+                });
+            },arr);
+        });
+    }
+</script>
+
+<script sid="main">
+    window.code2Msg = (function () {
+        let obj = {
+            500: '服务器内部错误,请稍候重试!',
+            404: '场地已被预定',
+            0: '预定成功',
+            400: '工作日,每人每天最多预定1个时间段!',
+            401: '休息日,每人每天最多预定2个时间段!',
+        };
+        return function (ret) {
+            let code = ret.code;
+            code = +code;
+            if (code in obj) {
+                return obj[code];
+            } else {
+                return `可能是服务器错误[${JSON.stringify(ret)}]`;
+            }
+        }
+    })();
+    $(function () {
+        $('body').append('<div class="ibas_bd"></div>');
+        document.getElementsByClassName('page__bd')[0].style.display = 'none';
+        let time = getTime(2);
+        // 1.检测当前时间，如果在12点后则不再抢场，7:58后到12点前则尝试获取两天后的场并开抢
+        // if (time.hour > 12) {
+        //     alert("12 点后不再尝试抢球场了");
+        //     return;
+        // }
+        if (time.hour < 7 || (time.hour === 7 && time.minute < 59)) {
+            // 等待时间
+            document.getElementsByClassName('ibas_bd')[0] = "现在还早，到点前会自动刷新当前页面";
+            return setTimeout(() => {
+                location.reload();
+            },time.deta);
+        }
+        window.ReserveCb = function (ret) {
+            let code = ret.code;
+            let tr = document.getElementById('tr_' + window.nexter.CurrentObj.id);
+            if (code === -1) {
+                tr.style.background = 'darkorange';
+            } else if (code === 0) {
+                tr.style.background = 'aquamarine';
+            } else {
+                //
+            }
+            tr.getElementsByClassName('result')[0].innerText = code2Msg(ret);
+            tr.getElementsByTagName('button')[0].setAttribute('tar','-1')
+        };
+        window.InitNexter(time.day).then(() => {
+            // window.addInfo(`draw-table obj.length = ${window.nexter.objs.length}`);
+            // 绘制表格
+            drawTable(window.nexter.objs.map(o=>o.info),"场地预定表");
+            setTimeout(() => {
+                new Array(...document.getElementsByClassName('apply')).forEach(btn => {
+                    btn.onclick = function () {
+                        // window.addInfo(`申请 ele = [${this.parentElement.innerHTML}]`);
+                        let id = this.getAttribute('tar');
+                        // window.addInfo(`申请 id = [${id}]`);
+                        if (id !== -1) {
+                            window.nexter.getObjById(id);
+                            $('#btn').click();
+                        }
+                    }
+                })
+            });
+        });
+    });
+</script>
