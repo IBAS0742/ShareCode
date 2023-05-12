@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<link rel="stylesheet" href="./leaflet_1.7.1/leaflet.css"/>
+	<script src="./leaflet_1.7.1/leaflet.js"></script>
+	<script src="../数据获取/apis.js"></script>
+	<style>
+		body {
+			padding: 0;
+			margin: 0;
+			display: flex;
+			flex-direction: column;
+		}
+		#table {
+			width: 100vw;
+			height: 300px;
+			overflow-y: scroll;
+		}
+		#map {
+			height: calc(100vh - 300px);
+			width: 100vw;
+		}
+		.info {
+			padding: 6px 8px;
+			font: 14px/16px Arial, Helvetica, sans-serif;
+			background: white;
+			background: rgba(255,255,255,0.8);
+			box-shadow: 0 0 15px rgba(0,0,0,0.2);
+			border-radius: 5px;
+		}
+		.info h4 {
+			margin: 0 0 5px;
+			color: #777;
+		}
+		
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			border-spacing: 0;
+		}
+		
+		td,th {
+			padding: 0;
+		}
+		
+		.pure-table {
+			border-collapse: collapse;
+			border-spacing: 0;
+			empty-cells: show;
+			border: 1px solid #cbcbcb;
+		}
+		
+		.pure-table caption {
+			color: #000;
+			font: italic 85%/1 arial,sans-serif;
+			padding: 1em 0;
+			text-align: center;
+		}
+		
+		.pure-table td,.pure-table th {
+			border-left: 1px solid #cbcbcb;
+			border-width: 0 0 0 1px;
+			font-size: inherit;
+			margin: 0;
+			overflow: visible;
+			padding: .5em 1em;
+		}
+		
+		.pure-table thead {
+			background-color: #e0e0e0;
+			color: #000;
+			text-align: left;
+			vertical-align: bottom;
+		}
+		
+		.pure-table td {
+			background-color: transparent;
+		}
+	</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="table"></div>
+</body>
+<script>
+	class Control {
+		constructor(map, position) {
+			this.position = position || "topright";
+			this.dom = null;
+			this.init(map, this.position);
+		}
+		init(map,position) {
+			let $this = this;
+			let control = L.control({position});
+			control.onAdd = function () {
+				this.dom = L.DomUtil.create('div', 'info');
+				$this.dom = this.dom;
+				return this.dom;
+			};
+			control.addTo(map);
+		}
+	}
+	window.points = (new class {
+		constructor() {
+			this.points = [];
+			this.ours = true;
+			this.markers = null;
+			this.map = null;
+			this.icons = {
+				inline: null,
+				offline: null,
+			};
+			this.maper = {};
+		}
+		renderPoints() {
+			// ours
+			let lat = 'lat';
+			let lng = 'lng';
+			if (!this.ours) {
+				lat = 'dLat';
+				lng = 'dLng';
+			}
+			if (this.markers) {
+				this.markers.remove();
+			}
+			let markers = [];
+			this.points.forEach(p => {
+				let marker = null;
+				if (p.netStatus === "1") {
+					marker = L.marker([p[lat], p[lng]], {
+						title: p.Name,
+						info: p,
+						icon: this.icons.inline
+					});
+				} else {
+					marker = L.marker([p[lat], p[lng]], {
+						title: p.Name,
+						info: p,
+						icon: this.icons.offline
+					});
+				}
+				markers.push(marker);
+			});
+			this.markers = L.layerGroup(markers).addTo(this.map);
+			for (var i in this.markers._layers) {
+				// console.log(i);
+				this.maper[this.markers._layers[i].options.info.id] = i;
+			}
+		}
+		flyTo(id) {
+			let ind = this.maper[id];
+			if (ind) {
+				let marker = this.markers._layers[ind];
+				this.map.flyTo(marker.getLatLng(),14);
+				let src = [marker._icon.src,''];
+				let times = 10;
+				let flashId = setInterval(() => {
+					marker._icon.src = src[times % 2];
+					times--;
+					if (!times) {
+						clearInterval(flashId);
+						marker._icon.src = src[0];
+					}
+				},200);
+			}
+		}
+	});
+	window.onload = function () {
+		window.pointOur = true;
+		var map = L.map('map', {zoomControl: false}).setView([43.881385299883725, 89.62523401465116], 10);
+		window.points.map = map;
+		window.points.icons.inline = L.icon({
+			iconUrl: './image/online.png',
+			iconSize: [15, 15],
+		});
+		window.points.icons.offline = L.icon({
+			iconUrl: './image/offline.png',
+			iconSize: [15, 15],
+		});
+		window.map = map;
+		var tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			maxZoom: 19,
+			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+		}).addTo(map);
+		window.apis.getDeviceInfo().then(points => {
+			window.points.points = points.map(_ => {
+				return {
+					..._,
+					sensorList: JSON.parse(_.sensorList)
+				};
+			}).filter(_=>_.lat !== "-1");
+			initStatus();
+			buildTable();
+			window.points.renderPoints();
+		});
+	};
+	function buildTable() {
+		let bodys = window.points.points.map(point => {
+			return `<tr><td>${point.id}</td><td>${point.name}</td><td>${point.mineTime}</td><td>${point.netStatus === '1' ? '在线' : '离线'}</td>
+<td><button class="locate-btn" tar="${point.id}">定位</button></td></tr>`
+		});
+		let dom = `<table class="pure-table">
+<thead>
+<tr><th>id</th><th>name</th><th>埋下时间</th><th>状态</th><th>定位</th></tr>
+</thead>
+<tbody>${bodys.join('\r\n')}</tbody>
+</table>`;
+		document.getElementById('table').innerHTML = dom;
+		new Array(...document.getElementsByClassName('locate-btn')).forEach(btn => {
+			btn.onclick = function () {
+				let id = this.getAttribute('tar');
+				window.points.flyTo(id);
+			};
+		});
+	}
+	function initStatus() {
+		let all = window.points.points.length;
+		let offline = window.points.points.filter(_=>_.netStatus==='0').length;
+		new Control(window.map,'topleft').dom.innerHTML = `在线：${all - offline}<br/>离线：${offline}`;
+		new Control(window.map,'topleft').dom.innerHTML = `<input type="radio" name="location" checked="true" val="1"> 奥维定位<br/><input type="radio" name="location" val="0"> 厂家定位`;
+		new Array(...document.querySelectorAll('[name="location"]')).forEach(dom => {
+			dom.onclick = function () {
+				window.pointOur = this.getAttribute('val') === "1";
+				window.points.ours = window.pointOur;
+				window.points.renderPoints();
+			}
+		});
+	}
+</script>
+</html>

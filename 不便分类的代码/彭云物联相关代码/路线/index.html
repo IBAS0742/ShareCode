@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+</head>
+<body>
+
+</body>
+<script>
+	let d = document.createElement('DIV');
+	window.trs = null;
+	let toTS = (function () {
+		let d = new Date();
+		d.setMilliseconds(0);
+		return function (dataStr) {
+			// 2020-02-01T10:01:02Z
+			var ts = dataStr.split('T').map(_=>_.split(/[-:Z]/g)).flatMap(_=>_);
+			d.setFullYear(+ts[0]);
+			d.setMonth(+ts[1] - 1);
+			d.setDate(+ts[2]);
+			d.setHours(+ts[3]);
+			d.setMinutes(+ts[4]);
+			d.setSeconds(+ts[5]);
+			console.log(d);
+			return d.getTime();
+		};
+	})();
+	fetch('./2023_04_27_1.gpx').then(_=>_.text()).then(_ => {
+		d.innerHTML = _;
+		window.trs = new Array(...d.getElementsByTagName('trkpt')).filter((_,ind) => ind % 2).map(_ => {
+			return {
+				lat: +_.getAttribute('lat'),
+				lng: +_.getAttribute('lon'),
+				time: toTS(_.childNodes[0].innerText)
+			};
+		});
+	});
+	function calcRate(i,j) {
+		return (trs[i].lat - trs[j].lat) / (trs[i].lng - trs[j].lng)
+	}
+</script>
+</html>

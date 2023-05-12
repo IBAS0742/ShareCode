@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<script src="./echarts.js"></script>
+	<style>
+		body {
+			padding: 0;
+			margin: 0;
+		}
+		#ec {
+			width: 100vw;height: 100vh;
+		}
+	</style>
+	<script src="./../数据获取/apis.js"></script>
+</head>
+<body>
+<div id="ec"></div>
+</body>
+<script>
+	let ts2Date = (function () {
+		let d = new Date();
+		return function(ts) {
+			d.setTime(ts);
+			return d.toLocaleString();
+		}
+	})();
+	window.onload = function() {
+		window.echart = echarts.init(document.getElementById('ec'));
+		window.apis.listDataByDeviceId('121000230404029').then(data => {
+			data = data.map(_ => {
+				let time = _.time;
+				return {
+					..._,
+					time,
+					dateStr: ts2Date(time),
+				}
+			});
+			buildTimeLine(data);
+		});
+	};
+	function buildTimeLine(data) {
+		let option = {
+			tooltip: {
+				trigger: 'axis',
+				axisPointer: {
+					type: 'cross',
+					label: {
+						backgroundColor: '#6a7985'
+					}
+				}
+			},
+			dataZoom: [{
+				startValue: data[0].dateStr
+			}, {
+				type: 'inside'
+			}],
+			xAxis: {
+				type: 'category',
+				data: []
+			},
+			yAxis: {
+				type: 'value'
+			},
+			series: [{
+				symbolSize: 4,
+				data: [],
+				type: 'scatter',
+			}]
+		};
+		data.forEach((d, ind) => {
+			if (ind) {
+				option.xAxis.data.push(d.dateStr);
+				option.series[0].data.push(parseInt((d.time - data[ind - 1].time) / 300000));
+			}
+		});
+		window.echart.setOption(option);
+	}
+</script>
+</html>
