@@ -1,0 +1,37 @@
+.container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 300px;
+    background-color: #f0f0f0;
+    padding: 10px;
+    height: 100vh;
+    overflow: auto;
+}
+
+.sidebar div {
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.sidebar div:hover {
+    background-color: #45a049;
+}
+
+.main-content {
+    width: calc(100% - 300px);
+    padding: 10px;
+}

@@ -36,5 +36,9 @@ window.apis = {
     },
     listDataByDeviceId(id) {
         return apis.toJson(apis.post('listDataByDeviceId', [id + ''],false));
+    },
+    getDataStatusById(id) {
+        return apis.toJson(apis.post('getDataStatusById', [id + ''],false));
     }
 };
+

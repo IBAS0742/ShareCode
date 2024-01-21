@@ -135,14 +135,30 @@
         for (let i = 0;i < 10;i++) {
             strs += String.fromCharCode(48 + i);
         }
-        // 000001 => 'a'
-        return function (flags) {
-            let f = '';
-            flags = flags.join('');
-            for (let i = 0;i < 48;i += 6) {
-                f += strs[parseInt(flags.substring(i, i + 6),'2')];
+        let zs = '000000';
+        function tolen(s) {
+            s = s + '';
+            if (s.length < 6) {
+                return zs.substring(s.length) + s;
             }
-            return f;
+            return s;
+        }
+        // 000001 => 'a'
+        return {
+            encode:function (flags) {
+                let f = '';
+                flags = flags.join('');
+                for (let i = 0;i < 48;i += 6) {
+                    f += strs[parseInt(flags.substring(i, i + 6),'2')];
+                }
+                return f;
+            },
+            // 'a' => 000001
+            decode:function (flags) {
+                return flags.split('').map(_ => strs.indexOf(_))
+                    .map(_ => tolen(_.toString(2)).split('').map(_=>+_))
+                    .flatMap(_=>_);
+            }
         };
     })();
     let halfHours = 30 * 60 * 1000;
@@ -236,7 +252,7 @@
                                     flags[hd[10]] = 1;
                                 }
                             });
-                            let flag = getFlag(flags);
+                            let flag = getFlag.encode(flags);
                             return apis.addDataStatus(device.id, day.ts, flag);
                         } else {
                             return null;
@@ -373,7 +389,7 @@
  {
     "port": ":8099",
     "port_desc": "端口",
-    "db_path": "C:\\pan\\code\\golang\\toolbox\\simpledb\\soil_data.db",
+    "db_path": "soil_data.db",
     "db_path_desc": "数据库位置（相对位置时表示程序所在位置），可以另外由 --dbpath 参数指定",
     "static_path": "./",
     "static_path_desc": "(html位置)",
@@ -455,6 +471,20 @@
             "param": ["id", "deviceId", "date", "record"],
             "return": [],
             "sql": "insert OR IGNORE into dataStatus(id,deviceId,date,record) values(\"{id}\",\"{deviceId}\",\"{date}\",\"{record}\")"
+        },
+        {
+            "name": "getDataStatusByDate",
+            "name_desc": "获取某个日期下的所有数据状态",
+            "param": ["date"],
+            "return": ["id", "deviceId", "date", "record"],
+            "sql": "select id,deviceId,date,record from dataStatus where date=\"{date}\""
+        },
+        {
+            "name": "getDataStatusById",
+            "name_desc": "获取某个设备的所有数据状态",
+            "param": ["deviceId"],
+            "return": ["id", "deviceId", "date", "record"],
+            "sql": "select id,deviceId,date,record from dataStatus where deviceId=\"{deviceId}\" ORDER BY date asc"
         }
     ]
 }
